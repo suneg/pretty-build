@@ -37,7 +37,7 @@ namespace Pretty.Build
 
             Console.ForegroundColor = ConsoleColor.White;
 
-            p.Parse(args);
+            var extra = p.Parse(args);
 
             if (help)
             {
@@ -51,16 +51,26 @@ namespace Pretty.Build
             }
             
 
-            FileInfo projectFile = new FileInfo("project.json");
+            FileInfo projectFile = new FileInfo(extra[0]);
             String json = System.IO.File.ReadAllText(projectFile.FullName, Encoding.UTF8);
 
-            JsonSerializerSettings settings = new JsonSerializerSettings();
-            Project project = JsonConvert.DeserializeObject<Project>(json, settings);
+            Project project = null;
+
+            if (extra[0].EndsWith(".json"))
+            {
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                project = JsonConvert.DeserializeObject<Project>(json, settings);
+            }
+            else
+            {
+                var parser = new PrettyParser();
+                project = parser.Parse(projectFile);
+            }
 
             initializeDefaults(project, projectFile);
 
             
-            Console.Write("Project: ");
+            Console.Write("Name: ");
             Console.WriteLine(project.Name);
 
             Console.WriteLine("Type: {0}", project.Type.ToString().ToLower());
@@ -224,7 +234,7 @@ namespace Pretty.Build
 
         private static void initializeDefaults(Project project, FileInfo projectFile)
         {
-            project.Name = projectFile.Directory.Name;
+            project.Name = projectFile.Directory. Name;
             project.Path = projectFile.Directory;
             project.Output = project.Name + ".dll";
 

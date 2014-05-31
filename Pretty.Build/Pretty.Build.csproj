@@ -62,9 +62,9 @@
   <ItemGroup>
     <Compile Include="BuildSpec.cs" />
     <Compile Include="Model\BuildResult.cs" />
-    <Compile Include="Model\Dependency.cs" />
     <Compile Include="Pretty.cs" />
     <Compile Include="Model\Project.cs" />
+    <Compile Include="PrettyParser.cs" />
     <Compile Include="ProjectType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
