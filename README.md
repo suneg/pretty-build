@@ -1,6 +1,6 @@
 # Pretty Build #
 
-Eksperiment med en alternativ build løsning til .NET
+Eksperiment med en alternativ back-to-basics build løsning til .NET
 
 
 Ide 1: Skift 100 liniers non-readable csproj-filer ud med 3 liniers letforståelig plain-text
