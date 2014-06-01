@@ -45,7 +45,7 @@ Requires:
 project.txt
 ```
 #!text
-(tome)
+(tom)
 ```
 
 ..Now we're talking!
