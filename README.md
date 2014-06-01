@@ -1,6 +1,6 @@
-# README #
+# Pretty Build #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+Eksperiment med en alternativ build løsning til .NET
 
 ### What is this repository for? ###
 
