@@ -25,8 +25,8 @@ Requires:
     NUnit : 2.6.3
 
 Sources:
-   Class1.cs
-   Properties\AssemblyInfo.cs
+    Class1.cs
+    Properties\AssemblyInfo.cs
 ```
 
 ..stadig for stor. Vi fjerner krav til Name parameteren og defaulter til directory navnet. Vi defaulter Type til Library (standard assembly). Vi fjerner source listen og defaulter *.cs i alle subdirs
