@@ -65,3 +65,5 @@ Idag:
 
 I fremtiden:
 ![Screenshot 2014-06-01 23.52.32.png](https://bitbucket.org/repo/7nKE86/images/1396722961-Screenshot%202014-06-01%2023.52.32.png)
+
+Gad vide hvorfor Pretty er 2,5 gang hurtigere på ovenstående test projekt!
