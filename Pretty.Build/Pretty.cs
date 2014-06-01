@@ -24,7 +24,6 @@ namespace Pretty.Build
 
         public static void Main(String[] args)
         {
-            
             PrettyCommand command = PrettyCommand.None;
 
             var p = new OptionSet () {
@@ -49,26 +48,19 @@ namespace Pretty.Build
                 p.WriteOptionDescriptions(Console.Out);
                 return;
             }
-            
 
-            FileInfo projectFile = new FileInfo(extra[0]);
+
+            String defaultFile = "project.txt";
+
+            FileInfo projectFile = new FileInfo(extra.Count > 0 ? extra[0] : defaultFile);
             String json = System.IO.File.ReadAllText(projectFile.FullName, Encoding.UTF8);
 
-            Project project = null;
-
-            if (extra[0].EndsWith(".json"))
-            {
-                JsonSerializerSettings settings = new JsonSerializerSettings();
-                project = JsonConvert.DeserializeObject<Project>(json, settings);
-            }
-            else
-            {
-                var parser = new PrettyParser();
-                project = parser.Parse(projectFile);
-            }
+            Project project = new Project();
 
             initializeDefaults(project, projectFile);
 
+            var parser = new PrettyParser();
+            project = parser.Parse(projectFile, project);
             
             Console.Write("Name: ");
             Console.WriteLine(project.Name);
@@ -156,75 +148,92 @@ namespace Pretty.Build
 
         private static void Compile(Project project)
         {
-            var start = DateTime.Now;
-            CSharpCodeProvider codeProvider = new CSharpCodeProvider();
+            var outputAssembly = Path.Combine(project.OutputPath, project.Output);
+            var skip = false;
+            var failed = false;
 
-            System.CodeDom.Compiler.CompilerParameters parameters = new CompilerParameters();
-            parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("System.Core.dll");
-            parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
-            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-            parameters.ReferencedAssemblies.Add("System.Data.dll");
-            parameters.ReferencedAssemblies.Add("System.Xml.dll");
-            //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
-
-            foreach(var requirement in project.Requires) 
+            if (File.Exists(outputAssembly))
             {
-                var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
-                var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", requirementDirectoryName));
-
-                // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
-                var assemblies = Directory.GetFiles(requirementPath, "*.dll");
-                parameters.ReferencedAssemblies.AddRange(assemblies);
+                if(GetLatestSourceModification(project).CompareTo(File.GetLastWriteTime(outputAssembly)) < 0) {
+                    Console.WriteLine("Already at latest -> Skipping");
+                    skip = true;
+                }
             }
 
-            foreach (var dependency in project.Dependencies)
-            {
-                var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
+            var start = DateTime.Now;
 
-                // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
-                var assemblies = Directory.GetFiles(dependencyPath, "*.dll");
-                parameters.ReferencedAssemblies.AddRange(assemblies);
+            if (!skip)
+            {
+                CSharpCodeProvider codeProvider = new CSharpCodeProvider();
+
+                System.CodeDom.Compiler.CompilerParameters parameters = new CompilerParameters();
+                parameters.ReferencedAssemblies.Add("System.dll");
+                parameters.ReferencedAssemblies.Add("System.Core.dll");
+                parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
+                parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
+                parameters.ReferencedAssemblies.Add("System.Data.dll");
+                parameters.ReferencedAssemblies.Add("System.Xml.dll");
+                //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
+
+                foreach (var requirement in project.Requires)
+                {
+                    var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
+                    var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", requirementDirectoryName));
+
+                    // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
+                    var assemblies = Directory.GetFiles(requirementPath, "*.dll");
+                    parameters.ReferencedAssemblies.AddRange(assemblies);
+                }
+
+                foreach (var dependency in project.Dependencies)
+                {
+                    var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
+
+                    // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
+                    var assemblies = Directory.GetFiles(dependencyPath, "*.dll");
+                    parameters.ReferencedAssemblies.AddRange(assemblies);
+                }
+
+                parameters.GenerateExecutable = project.Type == ProjectType.Executable;
+
+                parameters.OutputAssembly = outputAssembly;
+                parameters.IncludeDebugInformation = true;
+                //parameters.CompilerOptions = "/keyfile:..\\frog.snk";
+
+                CompilerResults results = codeProvider.CompileAssemblyFromFile(parameters, project.Sources.ToArray());
+                if (results.Errors.Count > 0)
+                {
+                    Console.WriteLine("Errors:");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    foreach (CompilerError CompErr in results.Errors)
+                    {
+
+                        if (CompErr.FileName.Length > 0)
+                        {
+                            Console.WriteLine("    " + ShortFileName(CompErr.FileName, project) + ":" + CompErr.Line +
+                                " (" + CompErr.ErrorNumber + ") "
+                                + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
+                        }
+                        else
+                        {
+                            Console.WriteLine("    (" + CompErr.ErrorNumber + ") "
+                                + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
+                        }
+                    }
+                    Console.ResetColor();
+
+                    result.Add(new BuildResult("Build: FAILURE", DateTime.Now.Subtract(start).TotalSeconds, ConsoleColor.Red));
+
+                    failed = true;
+                }
             }
             
-            parameters.GenerateExecutable = project.Type == ProjectType.Executable;
-
-            parameters.OutputAssembly = Path.Combine(project.OutputPath, project.Output); ;
-            parameters.IncludeDebugInformation = true;
-            //parameters.CompilerOptions = "/keyfile:..\\frog.snk";
-            CompilerResults results = codeProvider.CompileAssemblyFromFile(parameters, project.Sources.ToArray());
-
-            if (results.Errors.Count > 0)
-            {
-                Console.WriteLine("Errors:");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                foreach (CompilerError CompErr in results.Errors)
-                {
-
-                    if (CompErr.FileName.Length > 0)
-                    {
-                        Console.WriteLine("    " + ShortFileName(CompErr.FileName, project) + ":" + CompErr.Line +
-                            " (" + CompErr.ErrorNumber + ") "
-                            + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
-                    }
-                    else
-                    {
-                        Console.WriteLine("    (" + CompErr.ErrorNumber + ") "
-                            + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
-                    }
-                }
-                Console.ResetColor();
-
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Build: FAILURE ({0}s)", Math.Round(DateTime.Now.Subtract(start).TotalSeconds, 2));
-                Console.ResetColor();
-            }
-            else
+            if (!failed)
             {
                 if (verbose)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine("Created " + parameters.OutputAssembly);
+                    Console.WriteLine("Created " + outputAssembly);
                     Console.ResetColor();
                 }
                     
@@ -232,9 +241,26 @@ namespace Pretty.Build
             }
         }
 
+        private static DateTime GetLatestSourceModification(Project project)
+        {
+            DateTime? latestModificationDate = null;
+
+            foreach (var file in project.Sources)
+            {
+                var lastWriteTime = File.GetLastWriteTime(file);
+
+                if (lastWriteTime.CompareTo(latestModificationDate) > 0)
+                {
+                    latestModificationDate = lastWriteTime;
+                }
+            }
+
+            return latestModificationDate != null ? (DateTime)latestModificationDate : DateTime.Now;
+        }
+
         private static void initializeDefaults(Project project, FileInfo projectFile)
         {
-            project.Name = projectFile.Directory. Name;
+            project.Name = projectFile.Directory.Name;
             project.Path = projectFile.Directory;
             project.Output = project.Name + ".dll";
 

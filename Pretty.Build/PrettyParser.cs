@@ -16,10 +16,8 @@ namespace Pretty.Build
 
         }
 
-        public Project Parse(FileInfo file)
+        public Project Parse(FileInfo file, Project result)
         {
-            Project result = new Project();
-
             String[] lines = System.IO.File.ReadAllLines(file.FullName);
 
             foreach(var line in lines) {
@@ -32,6 +30,7 @@ namespace Pretty.Build
                 }
                 else if (char.IsLetter(line[0]))
                 {
+                    
                     if (line.ToLower().StartsWith("name:"))
                     {
                         result.Name = line.Split(':')[1].Trim();
@@ -39,6 +38,10 @@ namespace Pretty.Build
                     else if (line.ToLower().StartsWith("type:"))
                     {
                         result.Type = (ProjectType)Enum.Parse(typeof(ProjectType), line.Split(':')[1].Trim(), true);
+                    }
+                    if(line.ToLower().StartsWith("output:"))
+                    {
+                        result.Output = line.Split(':')[1].Trim();
                     }
                 }
 
