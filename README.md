@@ -11,9 +11,10 @@ Ide 4: Undgå omfattende kopiering af binaries under build ved at gemme output e
 
 ### Første udkast til "Minimum viable build file" ###
 
-project.txt
+
 ```
 #!text
+# project.txt
 Name: MyAwesomeProject
 Type: library
 
@@ -30,9 +31,9 @@ Sources:
 
 ..stadig for stor. Vi fjerner krav til Name parameteren og defaulter til directory navnet. Vi defaulter Type til Library (standard assembly). Vi fjerner source listen og defaulter *.cs i alle subdirs
 
-project.txt
 ```
 #!text
+# project.txt
 Dependencies:
     BestBrains.System
 
@@ -42,9 +43,9 @@ Requires:
 
 ..stadig for stor. Hvad nu hvis man ikke havde brugt NUnit og BestBrains.System (en plausibel start på et projekt)
 
-project.txt
 ```
 #!text
+# project.txt
 (tom)
 ```
 
