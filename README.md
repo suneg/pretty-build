@@ -14,7 +14,7 @@ Ide 4: Undgå omfattende kopiering af binaries under build ved at gemme output e
 
 ```
 #!text
-# project.txt
+# cat project.txt
 Name: MyAwesomeProject
 Type: library
 
@@ -33,7 +33,7 @@ Sources:
 
 ```
 #!text
-# project.txt
+# cat project.txt
 Dependencies:
     BestBrains.System
 
@@ -45,7 +45,7 @@ Requires:
 
 ```
 #!text
-# project.txt
+# cat project.txt
 (tom)
 ```
 
