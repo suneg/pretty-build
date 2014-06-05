@@ -18,7 +18,7 @@ namespace Pretty.Build
         
         public static bool help = false;
         public static bool verbose = false;
-        public static bool onlyInfo = false;
+        public static bool onlyInfo = true;
 
         public static List<BuildResult> result = new List<BuildResult>();
 
@@ -52,7 +52,26 @@ namespace Pretty.Build
 
             String defaultFile = "project.txt";
 
+            if (extra.Count == 0 && !File.Exists(defaultFile))
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("Project file 'project.txt' is not found. Create it now? Y/N: ");
+                String input = Console.ReadLine();
+                Console.ResetColor();
+                if (input.ToLower() == "y")
+                {
+                    File.Create("project.txt").Close();
+                }
+                else
+                {
+                    return;
+                }
+                
+            }
+            
             FileInfo projectFile = new FileInfo(extra.Count > 0 ? extra[0] : defaultFile);
+
+           
             String json = System.IO.File.ReadAllText(projectFile.FullName, Encoding.UTF8);
 
             Project project = new Project();
@@ -60,7 +79,18 @@ namespace Pretty.Build
             initializeDefaults(project, projectFile);
 
             var parser = new PrettyParser();
-            project = parser.Parse(projectFile, project);
+            try
+            {
+                project = parser.Parse(projectFile, project);
+            }
+            catch (InvalidConfigurationException ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(ex.ToString());
+                Console.ResetColor();
+                return;
+            }
+            
             
             Console.Write("Name: ");
             Console.WriteLine(project.Name);
@@ -84,8 +114,11 @@ namespace Pretty.Build
 
             AttachAllSourceCode(project, projectFile.Directory);
 
-            if (onlyInfo)
-                return;
+            if (command == PrettyCommand.None)
+            {
+                result.Add(new BuildResult("Configuration: VALID" , 0, ConsoleColor.Green));
+            }
+                
 
             if ((command & PrettyCommand.Clean) == PrettyCommand.Clean)
             {
@@ -262,6 +295,7 @@ namespace Pretty.Build
         {
             project.Name = projectFile.Directory.Name;
             project.Path = projectFile.Directory;
+
             project.Output = project.Name + ".dll";
 
             var outputDirectory = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", project.Name));

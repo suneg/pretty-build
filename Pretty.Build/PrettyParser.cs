@@ -37,7 +37,21 @@ namespace Pretty.Build
                     }
                     else if (line.ToLower().StartsWith("type:"))
                     {
-                        result.Type = (ProjectType)Enum.Parse(typeof(ProjectType), line.Split(':')[1].Trim(), true);
+                        String configuredValue = line.Split(':')[1].Trim();
+                        try
+                        {
+                            result.Type = (ProjectType)Enum.Parse(typeof(ProjectType), configuredValue, true);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            var validValues = new List<String>();
+                            foreach( var value in Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>()) 
+                            {
+                                validValues.Add(value.ToString());
+                            }
+                            
+                            throw new InvalidConfigurationException("Type", configuredValue, String.Join(", ", validValues.ToArray()), file.FullName);
+                        }
                     }
                     if(line.ToLower().StartsWith("output:"))
                     {
@@ -45,7 +59,7 @@ namespace Pretty.Build
                     }
                 }
 
-                if (line.StartsWith("    "))
+                if (line.StartsWith("    ") || line.StartsWith("  "))
                 {
                     if (currentSection == "dependencies")
                     {

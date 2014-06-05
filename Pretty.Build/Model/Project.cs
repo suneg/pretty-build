@@ -11,8 +11,17 @@ namespace Pretty.Build
     {
 
         private string name;
+        private ProjectType type;
 
-        public ProjectType Type { get; set; }
+        public ProjectType Type {
+            get { return type; }
+            set { type = value; 
+                if(type == ProjectType.Executable) 
+                {
+                    Output = Output.Replace(".dll", ".exe");
+                }
+            } 
+        }
         public String Output { get; set; }
         public List<Dictionary<String, String>> Requires = new List<Dictionary<String, String>>();
         public String Name {
