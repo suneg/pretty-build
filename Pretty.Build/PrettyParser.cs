@@ -53,6 +53,7 @@ namespace Pretty.Build
                             throw new InvalidConfigurationException("Type", configuredValue, String.Join(", ", validValues.ToArray()), file.FullName);
                         }
                     }
+
                     if(line.ToLower().StartsWith("output:"))
                     {
                         result.Output = line.Split(':')[1].Trim();
