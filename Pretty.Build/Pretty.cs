@@ -71,7 +71,7 @@ namespace Pretty.Build
             
             FileInfo projectFile = new FileInfo(extra.Count > 0 ? extra[0] : defaultFile);
 
-            // What the hell is this?
+            // What the hell is this? Well.. some simple IO?
             String json = System.IO.File.ReadAllText(projectFile.FullName, Encoding.UTF8);
 
             Project project = new Project();
