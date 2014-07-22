@@ -10,7 +10,7 @@ using System.CodeDom.Compiler;
 using NDesk.Options;
 using Pretty.Build.Model;
 
-namespace Pretty.Build
+namespace Pretty.Buildx
 {
     public class Pretty
     {
