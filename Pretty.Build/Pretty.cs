@@ -71,6 +71,7 @@ namespace Pretty.Build
             
             FileInfo projectFile = new FileInfo(extra.Count > 0 ? extra[0] : defaultFile);
 
+           
             String json = System.IO.File.ReadAllText(projectFile.FullName, Encoding.UTF8);
 
             Project project = new Project();
