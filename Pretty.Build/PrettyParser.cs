@@ -67,7 +67,7 @@ namespace Pretty.Build
                     } 
                     else if (currentSection == "requires")
                     {
-                        var req = line.Trim().Split('-');
+                        var req = line.Trim().Split(':');
                         var dic = new Dictionary<String, String>();
                         dic.Add(req[0].Trim(), req[1].Trim());
                         result.Requires.Add(dic);

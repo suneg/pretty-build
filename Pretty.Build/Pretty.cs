@@ -108,7 +108,23 @@ namespace Pretty.Build
             Console.WriteLine(String.Empty);
             Console.WriteLine("Requires: ");
             Console.ForegroundColor = ConsoleColor.Cyan;
-            project.Requires.ForEach(i => Console.WriteLine("    {0} - {1}", i.Keys.First<String>(), i.Values.First<String>()));
+
+            foreach(var requirement in project.Requires) {
+                var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
+                var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", requirementDirectoryName));
+
+                if (Directory.Exists(requirementPath))
+                {
+                    Console.WriteLine("    {0} : {1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'", requirement.Keys.First<String>(), requirement.Values.First<String>(), requirement.Keys.First<String>().ToLower());
+                    Console.ResetColor();
+                }
+            }
+            
             Console.ResetColor();
             Console.WriteLine();
 
@@ -165,9 +181,9 @@ namespace Pretty.Build
         {
             Console.WriteLine("Sources:");
             Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("    **\\*.cs");
             foreach (FileInfo file in directoryInfo.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
-                Console.WriteLine("    " + ShortFileName(file.FullName, project));
                 project.Sources.Add(file.FullName);
             }
             Console.ResetColor();
@@ -206,12 +222,13 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
+                //parameters.ReferencedAssemblies.Add("System.Data.SqlServerCe.dll");
                 //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
 
                 foreach (var requirement in project.Requires)
                 {
                     var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
-                    var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", requirementDirectoryName));
+                    var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", requirementDirectoryName));
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
                     var assemblies = Directory.GetFiles(requirementPath, "*.dll");
@@ -220,7 +237,7 @@ namespace Pretty.Build
 
                 foreach (var dependency in project.Dependencies)
                 {
-                    var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
+                    var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", dependency));
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
                     var assemblies = Directory.GetFiles(dependencyPath, "*.dll");
