@@ -56,8 +56,9 @@ namespace Pretty.Build
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("Project file 'project.txt' is not found. Create it now? Y/N: ");
-                String input = Console.ReadLine();
                 Console.ResetColor();
+                String input = Console.ReadLine();
+                
                 if (input.ToLower() == "y")
                 {
                     File.Create("project.txt").Close();
@@ -315,7 +316,7 @@ namespace Pretty.Build
 
             project.Output = project.Name + ".dll";
 
-            var outputDirectory = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", project.Name));
+            var outputDirectory = "bin"; //System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", project.Name));
             Directory.CreateDirectory(outputDirectory);
 
             project.OutputPath = outputDirectory;
