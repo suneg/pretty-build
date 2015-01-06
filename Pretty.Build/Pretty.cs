@@ -222,8 +222,10 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
+                parameters.ReferencedAssemblies.Add("System.Web.dll");
+                parameters.ReferencedAssemblies.Add("System.Web.Services.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
-                //parameters.ReferencedAssemblies.Add("System.Data.SqlServerCe.dll");
+                parameters.ReferencedAssemblies.Add("System.Configuration.dll");
                 //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
 
                 foreach (var requirement in project.Requires)
@@ -238,7 +240,7 @@ namespace Pretty.Build
 
                 foreach (var dependency in project.Dependencies)
                 {
-                    var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", dependency));
+                    var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
                     var assemblies = Directory.GetFiles(dependencyPath, "*.dll");
@@ -249,6 +251,7 @@ namespace Pretty.Build
 
                 parameters.OutputAssembly = outputAssembly;
                 parameters.IncludeDebugInformation = true;
+                parameters.CompilerOptions = "/highentropyva+ /debug+ /debug:full /optimize- /utf8output /noconfig /subsystemversion:6.00";
                 //parameters.CompilerOptions = "/keyfile:..\\frog.snk";
 
                 CompilerResults results = codeProvider.CompileAssemblyFromFile(parameters, project.Sources.ToArray());
