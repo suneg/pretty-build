@@ -24,7 +24,7 @@ namespace Pretty.Build
         }
 
         public String Output { get; set; }
-        public List<Dictionary<String, String>> Requires = new List<Dictionary<String, String>>();
+        public List<Dictionary<String, String>> Packages = new List<Dictionary<String, String>>();
         public String Name {
             get { return name; }
             set { 

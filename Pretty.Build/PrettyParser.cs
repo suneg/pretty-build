@@ -65,12 +65,12 @@ namespace Pretty.Build
                     {
                         result.Dependencies.Add(line.Trim());
                     } 
-                    else if (currentSection == "requires")
+                    else if (currentSection == "packages")
                     {
                         var req = line.Trim().Split(':');
                         var dic = new Dictionary<String, String>();
                         dic.Add(req[0].Trim(), req[1].Trim());
-                        result.Requires.Add(dic);
+                        result.Packages.Add(dic);
                     }
                 }
             }

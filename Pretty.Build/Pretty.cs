@@ -17,7 +17,6 @@ namespace Pretty.Build
         
         public static bool help = false;
         public static bool verbose = false;
-        public static bool onlyInfo = true;
 
         public static List<BuildResult> result = new List<BuildResult>();
 
@@ -28,7 +27,6 @@ namespace Pretty.Build
             var p = new OptionSet () {
                 { "b|build",    v => command |= PrettyCommand.Build },
                 { "c|clean",    v => command |= PrettyCommand.Clean },
-                { "i|info",     v => onlyInfo = true },
                 { "t|test",     v => command |= PrettyCommand.Test },
                 { "v|verbose", v => verbose = true },
                 { "h|?|help",   v => help = v != null },
@@ -106,9 +104,9 @@ namespace Pretty.Build
             
             Console.WriteLine();
 
-            WriteLine("Requires: ", ConsoleColor.White);
+            WriteLine("Packages: ", ConsoleColor.White);
 
-            foreach(var requirement in project.Requires) {
+            foreach(var requirement in project.Packages) {
                 var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
                 var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", requirementDirectoryName));
 
@@ -131,7 +129,7 @@ namespace Pretty.Build
                 }
             }
 
-            if (project.Requires.Count == 0)
+            if (project.Packages.Count == 0)
             {
                 WriteLine("  # None", ConsoleColor.DarkGray);
             }
@@ -239,7 +237,7 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("System.Configuration.dll");
                 //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
 
-                foreach (var requirement in project.Requires)
+                foreach (var requirement in project.Packages)
                 {
                     var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
                     var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", requirementDirectoryName));
@@ -277,14 +275,14 @@ namespace Pretty.Build
 
                         if (CompErr.FileName.Length > 0)
                         {
-                            Console.WriteLine("  {0, 2} {1}:{2} ({3}) {4}\n", i, ShortFileName(CompErr.FileName, project), CompErr.Line,
+                            Console.WriteLine("  {0, 2}. {1}:{2} ({3}) {4}\n", i, ShortFileName(CompErr.FileName, project), CompErr.Line,
                                 CompErr.ErrorNumber, CompErr.ErrorText);
                         }
                         else
                         {
                             //Console.WriteLine(i + "    (" + CompErr.ErrorNumber + ") "
                             //    + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
-                            Console.WriteLine("  {0, 2} ({1}) {2}\n", i,
+                            Console.WriteLine("  {0, 2}. ({1}) {2}\n", i,
                                CompErr.ErrorNumber, CompErr.ErrorText);
                         }
 
