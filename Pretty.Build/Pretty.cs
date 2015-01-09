@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -55,9 +54,7 @@ namespace Pretty.Build
 
             if (extra.Count == 0 && !File.Exists(defaultFile))
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("Project file 'project.txt' is not found. Create it now? Y/N: ");
-                Console.ResetColor();
+                Write("Project file 'project.txt' is not found. Create it now? Y/N: ", ConsoleColor.Yellow);
                 String input = Console.ReadLine();
                 
                 if (input.ToLower() == "y")
@@ -87,48 +84,29 @@ namespace Pretty.Build
             }
             catch (InvalidConfigurationException ex)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(ex.ToString());
-                Console.ResetColor();
+                WriteLine(ex.ToString(), ConsoleColor.Yellow);
                 return;
             }
             
             
-            Console.Write("Name: ");
+            Write("Name: ", ConsoleColor.White);
+            WriteLine(project.Name, ConsoleColor.Gray);
 
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine(project.Name);
-            Console.ResetColor();
+            Write("Type: ", ConsoleColor.White);
+            WriteLine(project.Type.ToString().ToLower(), ConsoleColor.Gray);
+            Console.WriteLine();
 
-            Console.Write("Type: ");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine(project.Type.ToString().ToLower());
-            Console.ResetColor();
-            Console.ResetColor();
-            //Console.WriteLine("Output: {0}", project.Output);
-
-            Console.WriteLine(String.Empty);
-
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Dependencies: ");
-            Console.ResetColor();
-
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            project.Dependencies.ForEach(i => Console.WriteLine("    {0}", i));
+            WriteLine("Dependencies: ", ConsoleColor.White);
+            
+            project.Dependencies.ForEach(i => WriteLine(String.Format("    {0}", i), ConsoleColor.Cyan));
             if (project.Dependencies.Count == 0)
             {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine("    # None");
-                Console.ResetColor();
+                WriteLine("  # None", ConsoleColor.DarkGray);
             }
-            Console.ResetColor();
+            
+            Console.WriteLine();
 
-            Console.WriteLine(String.Empty);
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Requires: ");
-            Console.ResetColor();
-
-            Console.ForegroundColor = ConsoleColor.Cyan;
+            WriteLine("Requires: ", ConsoleColor.White);
 
             foreach(var requirement in project.Requires) {
                 var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
@@ -136,23 +114,26 @@ namespace Pretty.Build
 
                 if (Directory.Exists(requirementPath))
                 {
-                    Console.WriteLine("    {0} : {1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
+                    WriteLine(
+                        String.Format("    {0} : {1}", 
+                        requirement.Keys.First<String>(), 
+                        requirement.Values.First<String>())
+                        , ConsoleColor.Cyan);
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'", requirement.Keys.First<String>(), requirement.Values.First<String>(), requirement.Keys.First<String>().ToLower());
-                    Console.ResetColor();
+                    WriteLine(
+                        String.Format("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'", 
+                        requirement.Keys.First<String>(), 
+                        requirement.Values.First<String>(), 
+                        requirement.Keys.First<String>().ToLower())
+                        , ConsoleColor.Red);
                 }
             }
 
-            Console.ResetColor();
-
             if (project.Requires.Count == 0)
             {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine("    # None");
-                Console.ResetColor();
+                WriteLine("  # None", ConsoleColor.DarkGray);
             }
             
             
@@ -181,9 +162,7 @@ namespace Pretty.Build
 
                         if (verbose)
                         {
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
-                            Console.WriteLine("Deleted " + file);
-                            Console.ResetColor();
+                            WriteLine("Deleted " + file, ConsoleColor.DarkGray);
                         }
                     }
                 }
@@ -205,25 +184,21 @@ namespace Pretty.Build
             // Print result
             foreach(var element in result)
             {
-                Console.ForegroundColor = element.Color;
-                Console.WriteLine("{0} ({1}s)", element.Text, Math.Round(element.Seconds, 2));
-                Console.ResetColor();
+                WriteLine(
+                    String.Format("{0} ({1}s)", element.Text, Math.Round(element.Seconds, 2))
+                    , element.Color);
             }
         }
 
         private static void AttachAllSourceCode(Project project, DirectoryInfo directoryInfo)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Sources: ");
-            Console.ResetColor();
+            WriteLine("Sources: ", ConsoleColor.White);
 
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("    **\\*.cs");
+            WriteLine("    **\\*.cs", ConsoleColor.Gray);
             foreach (FileInfo file in directoryInfo.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
                 project.Sources.Add(file.FullName);
             }
-            Console.ResetColor();
             Console.WriteLine();
         }
 
@@ -293,22 +268,27 @@ namespace Pretty.Build
                 CompilerResults results = codeProvider.CompileAssemblyFromFile(parameters, project.Sources.ToArray());
                 if (results.Errors.Count > 0)
                 {
-                    Console.WriteLine("Errors:");
+                    WriteLine("Errors:", ConsoleColor.White);
                     Console.ForegroundColor = ConsoleColor.Yellow;
+
+                    int i = 1;
                     foreach (CompilerError CompErr in results.Errors)
                     {
 
                         if (CompErr.FileName.Length > 0)
                         {
-                            Console.WriteLine("    " + ShortFileName(CompErr.FileName, project) + ":" + CompErr.Line +
-                                " (" + CompErr.ErrorNumber + ") "
-                                + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
+                            Console.WriteLine("  {0, 2} {1}:{2} ({3}) {4}\n", i, ShortFileName(CompErr.FileName, project), CompErr.Line,
+                                CompErr.ErrorNumber, CompErr.ErrorText);
                         }
                         else
                         {
-                            Console.WriteLine("    (" + CompErr.ErrorNumber + ") "
-                                + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
+                            //Console.WriteLine(i + "    (" + CompErr.ErrorNumber + ") "
+                            //    + CompErr.ErrorText + Environment.NewLine + Environment.NewLine);
+                            Console.WriteLine("  {0, 2} ({1}) {2}\n", i,
+                               CompErr.ErrorNumber, CompErr.ErrorText);
                         }
+
+                        i++;
                     }
                     Console.ResetColor();
 
@@ -322,9 +302,7 @@ namespace Pretty.Build
             {
                 if (verbose)
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine("Created " + outputAssembly);
-                    Console.ResetColor();
+                    WriteLine("Created " + outputAssembly, ConsoleColor.DarkGray); 
                 }
                     
                 result.Add(new BuildResult("Build: SUCCESS", DateTime.Now.Subtract(start).TotalSeconds, ConsoleColor.Green));
@@ -359,6 +337,19 @@ namespace Pretty.Build
             Directory.CreateDirectory(outputDirectory);
 
             project.OutputPath = outputDirectory;
+        }
+
+        private static void Write(string message, ConsoleColor color)
+        {
+            Console.ForegroundColor = color;
+            Console.Write(message);
+            Console.ResetColor();
+        }
+
+        private static void WriteLine(string message, ConsoleColor color)
+        {
+            Write(message, color);
+            Console.WriteLine();
         }
     }
 }
