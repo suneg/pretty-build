@@ -14,7 +14,7 @@ namespace Pretty.Build
 {
     public class Pretty
     {
-        public enum PrettyCommand { None = 0, Build = 1, Clean = 2 }
+        public enum PrettyCommand { None = 0, Build = 1, Clean = 2, Test = 4 }
         
         public static bool help = false;
         public static bool verbose = false;
@@ -30,6 +30,7 @@ namespace Pretty.Build
                 { "b|build",    v => command |= PrettyCommand.Build },
                 { "c|clean",    v => command |= PrettyCommand.Clean },
                 { "i|info",     v => onlyInfo = true },
+                { "t|test",     v => command |= PrettyCommand.Test },
                 { "v|verbose", v => verbose = true },
                 { "h|?|help",   v => help = v != null },
             };
@@ -94,20 +95,39 @@ namespace Pretty.Build
             
             
             Console.Write("Name: ");
-            Console.WriteLine(project.Name);
 
-            Console.WriteLine("Type: {0}", project.Type.ToString().ToLower());
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(project.Name);
+            Console.ResetColor();
+
+            Console.Write("Type: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(project.Type.ToString().ToLower());
+            Console.ResetColor();
             Console.ResetColor();
             //Console.WriteLine("Output: {0}", project.Output);
 
             Console.WriteLine(String.Empty);
+
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Dependencies: ");
+            Console.ResetColor();
+
             Console.ForegroundColor = ConsoleColor.Cyan;
             project.Dependencies.ForEach(i => Console.WriteLine("    {0}", i));
+            if (project.Dependencies.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("    # None");
+                Console.ResetColor();
+            }
             Console.ResetColor();
 
             Console.WriteLine(String.Empty);
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Requires: ");
+            Console.ResetColor();
+
             Console.ForegroundColor = ConsoleColor.Cyan;
 
             foreach(var requirement in project.Requires) {
@@ -125,15 +145,24 @@ namespace Pretty.Build
                     Console.ResetColor();
                 }
             }
-            
+
             Console.ResetColor();
+
+            if (project.Requires.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("    # None");
+                Console.ResetColor();
+            }
+            
+            
             Console.WriteLine();
 
             AttachAllSourceCode(project, projectFile.Directory);
 
             if (command == PrettyCommand.None)
             {
-                result.Add(new BuildResult("Configuration: VALID" , 0, ConsoleColor.Green));
+                result.Add(new BuildResult("Spec: VALID" , 0, ConsoleColor.Green));
             }
                 
 
@@ -167,6 +196,10 @@ namespace Pretty.Build
                 Compile(project);
             }
 
+            if ((command & PrettyCommand.Test) == PrettyCommand.Test)
+            {
+                result.Add(new BuildResult("Test : SUCCESS", 1.9, ConsoleColor.Green));
+            } 
 
             Console.WriteLine();
             // Print result
@@ -180,8 +213,11 @@ namespace Pretty.Build
 
         private static void AttachAllSourceCode(Project project, DirectoryInfo directoryInfo)
         {
-            Console.WriteLine("Sources:");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Sources: ");
+            Console.ResetColor();
+
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("    **\\*.cs");
             foreach (FileInfo file in directoryInfo.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {

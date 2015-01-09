@@ -22,6 +22,7 @@ namespace Pretty.Build
                 }
             } 
         }
+
         public String Output { get; set; }
         public List<Dictionary<String, String>> Requires = new List<Dictionary<String, String>>();
         public String Name {
@@ -29,7 +30,7 @@ namespace Pretty.Build
             set { 
                 name = value;
 
-                var outputDirectory = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", name));
+                var outputDirectory = "bin"; //System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", name));
                 Directory.CreateDirectory(outputDirectory);
 
                 OutputPath = outputDirectory;
