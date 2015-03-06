@@ -9,10 +9,15 @@ using System.CodeDom.Compiler;
 using NDesk.Options;
 using Pretty.Build.Model;
 
+
 namespace Pretty.Build
 {
+    
     public class Pretty
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
         public enum PrettyCommand { None = 0, Build = 1, Clean = 2, Test = 4 }
         
         public static bool help = false;
@@ -262,7 +267,7 @@ namespace Pretty.Build
                     bool found = false;
                     for (int i = 0; i < searchOrder.Length; i++)
                     {
-                        Console.WriteLine("Searching " + searchOrder[i]);
+                        //Console.WriteLine("Searching " + searchOrder[i]);
                         if (Directory.Exists(searchOrder[i]))
                         {
                             found = true;
@@ -278,6 +283,14 @@ namespace Pretty.Build
                             {
                                 Console.WriteLine("No assemblies found in '" + searchOrder[i] + "'");
                             }
+                            else
+                            {
+                                foreach (var assembly in assemblies)
+                                {
+                                     log.Info("Adding assembly: " + assembly);
+                                }
+                            }
+
 
                             parameters.ReferencedAssemblies.AddRange(assemblies);
 

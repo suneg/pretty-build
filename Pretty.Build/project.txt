@@ -6,3 +6,4 @@ type: executable
 
 packages:
   NDesk.Options : 0.2.1
+  Log4net : 2.0.3
