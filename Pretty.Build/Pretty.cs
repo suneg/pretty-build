@@ -231,20 +231,70 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
-                parameters.ReferencedAssemblies.Add("System.Web.dll");
-                parameters.ReferencedAssemblies.Add("System.Web.Services.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
-                parameters.ReferencedAssemblies.Add("System.Configuration.dll");
+                /*parameters.ReferencedAssemblies.Add("System.Web.dll");
+                parameters.ReferencedAssemblies.Add("System.Web.Services.dll");
+                
+                parameters.ReferencedAssemblies.Add("System.Configuration.dll");*/
                 //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
 
                 foreach (var requirement in project.Packages)
                 {
                     var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
-                    var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", requirementDirectoryName));
+                    var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib\", requirementDirectoryName));
+
+                    var searchOrder = new string[]
+                    {
+                        Path.Combine(requirementPath + "net45-full"),
+                        Path.Combine(requirementPath + "net45"),
+                        Path.Combine(requirementPath + "net40-full"),
+                        Path.Combine(requirementPath + "net40"),
+                        requirementPath
+                    };
+                
+
+                    if (verbose)
+                    {
+                        WriteLine("Package " + requirementPath + "\\*.dll", ConsoleColor.DarkGray);
+                    }
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
-                    var assemblies = Directory.GetFiles(requirementPath, "*.dll");
-                    parameters.ReferencedAssemblies.AddRange(assemblies);
+                    bool found = false;
+                    for (int i = 0; i < searchOrder.Length; i++)
+                    {
+                        Console.WriteLine("Searching " + searchOrder[i]);
+                        if (Directory.Exists(searchOrder[i]))
+                        {
+                            found = true;
+                            
+                            var assemblies = Directory.GetFiles(searchOrder[i], "*.dll");
+                            assemblies.All(v =>
+                            {
+                                Console.WriteLine(v);
+                                return true;
+                            });
+
+                            if (assemblies.Length == 0)
+                            {
+                                Console.WriteLine("No assemblies found in '" + searchOrder[i] + "'");
+                            }
+
+                            parameters.ReferencedAssemblies.AddRange(assemblies);
+
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        WriteLine(
+                        String.Format("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'",
+                        requirement.Keys.First<String>(),
+                        requirement.Values.First<String>(),
+                        requirement.Keys.First<String>().ToLower())
+                        , ConsoleColor.Red);
+                        
+                    }
                 }
 
                 foreach (var dependency in project.Dependencies)

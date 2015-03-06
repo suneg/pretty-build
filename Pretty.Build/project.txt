@@ -1,6 +1,8 @@
+# Pretty Build - A nifty little build tool
+# ----------------------------------------
+
 name: pretty
 type: executable
 
 packages:
   NDesk.Options : 0.2.1
-
