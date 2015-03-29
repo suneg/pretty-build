@@ -15,13 +15,14 @@ Goal 5: Seperate compile & test from packaging and deployment
 
 Goal 6: Remove configuration (*.config) from build output
 
+Goal 7: Use coloring to default (implicit) versus explicit settings
+
 
 ### First draft of a "Minimum viable build file" ###
 
 
 ```
-#!text
-# cat project.txt
+C:\repos\MyAwesomeProject>type project.txt
 Name: MyAwesomeProject
 Type: library
 
@@ -39,8 +40,7 @@ Sources:
 ..still too verbose. Lets remove the required Name parameter and use the directory name as default value. Also lets set the default project type to Library (standard .NET assembly). Also we'll remove the list of source files, and include all *.cs files recursively by default
 
 ```
-#!text
-# cat project.txt
+C:\repos\MyAwesomeProject>type project.txt
 Dependencies:
     MyProject.Common
 
@@ -51,9 +51,8 @@ Requires:
 ..still too verbose. What if we had not included NUnit or the MyProject.Common assembly? (a plausible start start of a new .NET project)
 
 ```
-#!text
-# cat project.txt
-(tom)
+C:\repos\MyAwesomeProject>type project.txt
+C:\repos\MyAwesomeProject>
 ```
 
 ..Now we're talking!
