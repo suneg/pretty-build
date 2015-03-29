@@ -1,9 +1,6 @@
-# Pretty Build - A nifty little build tool
-# ----------------------------------------
+Name: pretty
+Type: executable
 
-name: pretty
-type: executable
-
-packages:
+Packages:
   NDesk.Options : 0.2.1
   Log4net : 2.0.3

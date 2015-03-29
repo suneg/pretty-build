@@ -205,7 +205,7 @@ namespace Pretty.Build
         {
             WriteLine("Sources: ", ConsoleColor.White);
 
-            WriteLine("    **\\*.cs", ConsoleColor.Gray);
+            WriteLine("    **\\*.cs", ConsoleColor.DarkGray);
             foreach (FileInfo file in directoryInfo.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
                 project.Sources.Add(file.FullName);
