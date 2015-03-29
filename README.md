@@ -60,9 +60,9 @@ C:\repos\MyAwesomeProject>
 ### Call to MSBuild ###
 
 Today:
-![alt tag](https://raw.github.com/suneg/pretty-build/master/doc/msbuild.png)
+![](raw.github.com/suneg/pretty-build/master/doc/msbuild.png)
 
 In the future:
-![alt tag](https://raw.github.com/suneg/pretty-build/master/doc/pretty.png)
+![](raw.github.com/suneg/pretty-build/master/doc/pretty.png)
 
 (wonder where the speed difference comes from)
