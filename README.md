@@ -15,7 +15,7 @@ Goal 5: Seperate compile & test from packaging and deployment
 
 Goal 6: Remove configuration (*.config) from build output
 
-Goal 7: Use coloring to default (implicit) versus explicit settings
+Goal 7: Use output coloring to signify default (implicit) versus explicit settings
 
 
 ### A pretty project file ###
