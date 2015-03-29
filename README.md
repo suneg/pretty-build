@@ -59,9 +59,9 @@ C:\repos\MyAwesomeProject>
 ### What about the output? ###
 
 Here's what you are probably looking at today.
-![](raw.github.com/suneg/pretty-build/master/doc/msbuild.png)
+![Typical MSBuild output](raw.github.com/suneg/pretty-build/master/doc/msbuild.png)
 
 Here's the same project build with Pretty Build.
-![](raw.github.com/suneg/pretty-build/master/doc/pretty.png)
+![Human readable output](raw.github.com/suneg/pretty-build/master/doc/pretty.png)
 
 (Wonder where the speed difference comes from by the way...)
