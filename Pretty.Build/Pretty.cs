@@ -27,6 +27,7 @@ namespace Pretty.Build
 
         public static void Main(String[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
             PrettyCommand command = PrettyCommand.None;
 
             var p = new OptionSet () {
@@ -37,6 +38,7 @@ namespace Pretty.Build
                 { "h|?|help",   v => help = v != null },
             };
 
+            
             Console.ForegroundColor = ConsoleColor.White;
 
             var extra = p.Parse(args);
@@ -191,6 +193,12 @@ namespace Pretty.Build
                     String.Format("{0} ({1}s)", element.Text, Math.Round(element.Seconds, 2))
                     , element.Color);
             }
+        }
+
+        private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine("failure. exiting");
+            System.Environment.Exit(0);
         }
 
         private static void AttachAllSourceCode(Project project, DirectoryInfo directoryInfo)
