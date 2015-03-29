@@ -60,9 +60,9 @@ C:\repos\MyAwesomeProject>
 ### Call to MSBuild ###
 
 Today:
-![Screenshot 2014-05-30 00.44.21.png](https://bitbucket.org/repo/7nKE86/images/1445401539-Screenshot%202014-05-30%2000.44.21.png)
+![alt tag](https://raw.github.com/suneg/pretty-build/master/doc/msbuild.png)
 
 In the future:
-![Screenshot 2014-06-01 23.52.32.png](https://bitbucket.org/repo/7nKE86/images/1396722961-Screenshot%202014-06-01%2023.52.32.png)
+![alt tag](https://raw.github.com/suneg/pretty-build/master/doc/pretty.png)
 
 (wonder where the speed difference comes from)
