@@ -245,12 +245,7 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
-                /*parameters.ReferencedAssemblies.Add("System.Web.dll");
-                parameters.ReferencedAssemblies.Add("System.Web.Services.dll");
-                
-                parameters.ReferencedAssemblies.Add("System.Configuration.dll");*/
-                //parameters.ReferencedAssemblies.Add(@"C:\Users\Sune\workspace\old-svn-code\sandbox\orm-bestbrains\Frog.Orm\Frog.Orm.dll");
-
+   
                 foreach (var requirement in project.Packages)
                 {
                     var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
@@ -283,7 +278,7 @@ namespace Pretty.Build
                             var assemblies = Directory.GetFiles(searchOrder[i], "*.dll");
                             assemblies.All(v =>
                             {
-                                Console.WriteLine(v);
+                                //Console.WriteLine(v);
                                 return true;
                             });
 
