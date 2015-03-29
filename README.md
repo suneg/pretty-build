@@ -18,7 +18,7 @@ Goal 6: Remove configuration (*.config) from build output
 Goal 7: Use coloring to default (implicit) versus explicit settings
 
 
-### First draft of a "Minimum viable build file" ###
+### A pretty project file ###
 
 
 ```
@@ -33,11 +33,10 @@ Requires:
     NUnit : 2.6.3
 
 Sources:
-    Class1.cs
-    Properties\AssemblyInfo.cs
+    **\*.cs
 ```
 
-..still too verbose. Lets remove the required Name parameter and use the directory name as default value. Also lets set the default project type to Library (standard .NET assembly). Also we'll remove the list of source files, and include all *.cs files recursively by default
+..still too verbose? Why not rely on defaults to make it simpler?
 
 ```
 C:\repos\MyAwesomeProject>type project.txt
@@ -48,7 +47,7 @@ Requires:
     NUnit : 2.6.3
 ```
 
-..still too verbose. What if we had not included NUnit or the MyProject.Common assembly? (a plausible start start of a new .NET project)
+..still too verbose? If you project has no external dependencies (third-party or custom) you can actually build using an empty file!
 
 ```
 C:\repos\MyAwesomeProject>type project.txt
@@ -57,12 +56,12 @@ C:\repos\MyAwesomeProject>
 
 ..Now we're talking!
 
-### Call to MSBuild ###
+### What about the output? ###
 
-Today:
+Here's what you are probably looking at today.
 ![](raw.github.com/suneg/pretty-build/master/doc/msbuild.png)
 
-In the future:
+Here's the same project build with Pretty Build.
 ![](raw.github.com/suneg/pretty-build/master/doc/pretty.png)
 
-(wonder where the speed difference comes from)
+(Wonder where the speed difference comes from by the way...)
