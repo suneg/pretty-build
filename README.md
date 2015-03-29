@@ -1,22 +1,22 @@
-# Pretty Build #
+﻿# Pretty Build #
 
-Eksperiment med en alternativ back-to-basics build løsning til .NET
-
-
-Ide 1: Skift 100 liniers non-readable csproj-filer ud med 3 liniers letforståelig plain-text
-
-Ide 2: Undgå cross-project referencer defineret i csproj filer
-
-Ide 3: Undgå 30 liniers build-output nonsens fra MSBuild
-
-Ide 4: Undgå omfattende kopiering af binaries under build ved at gemme output et andet sted end standard .\bin\debug
-
-Ide 5: Skil compile+test fra packaging og deployment
-
-Ide 6: Fjern configuration (*.config) fra build output
+An experiment with a back-to-basics build tool for .NET
 
 
-### Første udkast til "Minimum viable build file" ###
+Goal 1: Replace 100 lines of non-readable csproj-files with 3 lines of easy-to-understand plain-text
+
+Goal 2: Avoid cross-project references defined in csproj files
+
+Goal 3: Avoid 30 lines of MSBuild nonsense build-output
+
+Goal 4: Avoid the excessive copying of binaries during build (defaut MSBuild behavior)
+
+Goal 5: Seperate compile & test from packaging and deployment
+
+Goal 6: Remove configuration (*.config) from build output
+
+
+### First draft of a "Minimum viable build file" ###
 
 
 ```
@@ -26,7 +26,7 @@ Name: MyAwesomeProject
 Type: library
 
 Dependencies:
-    BestBrains.System
+    MyProject.Common
 
 Requires:
     NUnit : 2.6.3
@@ -36,19 +36,19 @@ Sources:
     Properties\AssemblyInfo.cs
 ```
 
-..stadig for stor. Vi fjerner krav til Name parameteren og defaulter til directory navnet. Vi defaulter Type til Library (standard assembly). Vi fjerner source listen og defaulter *.cs i alle subdirs
+..still too verbose. Lets remove the required Name parameter and use the directory name as default value. Also lets set the default project type to Library (standard .NET assembly). Also we'll remove the list of source files, and include all *.cs files recursively by default
 
 ```
 #!text
 # cat project.txt
 Dependencies:
-    BestBrains.System
+    MyProject.Common
 
 Requires:
     NUnit : 2.6.3
 ```
 
-..stadig for stor. Hvad nu hvis man ikke havde brugt NUnit og BestBrains.System (en plausibel start på et projekt)
+..still too verbose. What if we had not included NUnit or the MyProject.Common assembly? (a plausible start start of a new .NET project)
 
 ```
 #!text
@@ -58,12 +58,12 @@ Requires:
 
 ..Now we're talking!
 
-### Kald til MSBuild ###
+### Call to MSBuild ###
 
-Idag:
+Today:
 ![Screenshot 2014-05-30 00.44.21.png](https://bitbucket.org/repo/7nKE86/images/1445401539-Screenshot%202014-05-30%2000.44.21.png)
 
-I fremtiden:
+In the future:
 ![Screenshot 2014-06-01 23.52.32.png](https://bitbucket.org/repo/7nKE86/images/1396722961-Screenshot%202014-06-01%2023.52.32.png)
 
-Gad vide hvorfor Pretty er 2,5 gang hurtigere på ovenstående test projekt!
+(wonder where the speed difference comes from)
