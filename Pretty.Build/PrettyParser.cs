@@ -16,11 +16,12 @@ namespace Pretty.Build
 
         }
 
-        public Project Parse(FileInfo file, Project result)
+        public Project Parse(string projectSpecification, Project result, String specFilePath)
         {
-            String[] lines = System.IO.File.ReadAllLines(file.FullName);
+            var lines = projectSpecification.Split('\n');
 
-            foreach(var line in lines) {
+            foreach (var line in lines)
+            {
                 if (line.Trim().Length == 0)
                     continue;
 
@@ -30,7 +31,7 @@ namespace Pretty.Build
                 }
                 else if (char.IsLetter(line[0]))
                 {
-                    
+
                     if (line.ToLower().StartsWith("name:"))
                     {
                         result.Name = line.Split(':')[1].Trim();
@@ -38,6 +39,12 @@ namespace Pretty.Build
                     else if (line.ToLower().StartsWith("type:"))
                     {
                         String configuredValue = line.Split(':')[1].Trim();
+                        var commentStart = configuredValue.IndexOf("#");
+                        if (commentStart > -1) 
+                        {
+                            configuredValue = configuredValue.Substring(0, commentStart).Trim();
+                        }
+
                         try
                         {
                             result.Type = (ProjectType)Enum.Parse(typeof(ProjectType), configuredValue, true);
@@ -45,15 +52,15 @@ namespace Pretty.Build
                         catch (ArgumentException ex)
                         {
                             var validValues = new List<String>();
-                            foreach( var value in Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>()) 
+                            foreach (var value in Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>())
                             {
                                 validValues.Add(value.ToString());
                             }
-                            
-                            throw new InvalidConfigurationException("Type", configuredValue, String.Join(", ", validValues.ToArray()), file.FullName);
+
+                            throw new InvalidConfigurationException("Type", configuredValue, String.Join(", ", validValues.ToArray()), specFilePath);
                         }
                     }
-                    if(line.ToLower().StartsWith("output:"))
+                    else if (line.ToLower().StartsWith("output:"))
                     {
                         result.Output = line.Split(':')[1].Trim();
                     }
@@ -64,7 +71,7 @@ namespace Pretty.Build
                     if (currentSection == "dependencies")
                     {
                         result.Dependencies.Add(line.Trim());
-                    } 
+                    }
                     else if (currentSection == "packages")
                     {
                         var req = line.Trim().Split(':');
@@ -75,7 +82,35 @@ namespace Pretty.Build
                 }
             }
 
+            // Add defaults
+            if(result.Output == null) 
+            {
+                var extension = "";
+
+                switch(result.Type) 
+                {
+                    case ProjectType.Executable:
+                        extension = ".exe";
+                        break;
+                    case ProjectType.Library:
+                        extension = ".dll";
+                        break;
+                    default:
+                        extension = ".dll";
+                        break;
+                }
+
+                result.Output = result.Name + extension;
+            }
+
             return result;
+        }
+
+        public Project Parse(FileInfo file, Project result)
+        {
+            String spec = System.IO.File.ReadAllText(file.FullName);
+            return Parse(spec, result, file.FullName);
+            
         }
     }
 }

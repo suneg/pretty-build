@@ -15,12 +15,7 @@ namespace Pretty.Build
 
         public ProjectType Type {
             get { return type; }
-            set { type = value; 
-                if(type == ProjectType.Executable) 
-                {
-                    Output = Output.Replace(".dll", ".exe");
-                }
-            } 
+            set { type = value; } 
         }
 
         public String Output { get; set; }
