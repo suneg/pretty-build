@@ -94,6 +94,11 @@ namespace Pretty.Build
                 WriteLine(ex.ToString(), ConsoleColor.Yellow);
                 return;
             }
+            catch (Exception ex)
+            {
+                WriteLine(ex.ToString(), ConsoleColor.Yellow);
+                return;
+            }
             
             
             Write("Name: ", ConsoleColor.White);
