@@ -27,7 +27,9 @@ namespace Pretty.Build
 
         public static void Main(String[] args)
         {
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += (sender, e)
+                => DisplayUnhandledException(e.ExceptionObject);
+
             PrettyCommand command = PrettyCommand.None;
 
             var p = new OptionSet () {
@@ -195,9 +197,21 @@ namespace Pretty.Build
             }
         }
 
+        static void DisplayUnhandledException(object exceptionObject)
+        {
+            var e = exceptionObject as Exception;
+            if (e == null)
+            {
+                e = new NotSupportedException("Unhandled exception is not an exception type: "
+                   + exceptionObject.ToString()
+                );
+            }
+        }
+
         private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Console.WriteLine("failure. exiting");
+            Console.WriteLine("failure. exiting", (Exception)e.ExceptionObject);
+
             System.Environment.Exit(0);
         }
 
