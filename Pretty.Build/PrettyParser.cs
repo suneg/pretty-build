@@ -82,7 +82,7 @@ namespace Pretty.Build
                     }
                 }
             }
-
+            
             // Add defaults
             if(result.Output == null) 
             {
@@ -101,8 +101,11 @@ namespace Pretty.Build
                         break;
                 }
 
+
                 result.Output = result.Name + extension;
             }
+
+            
 
             return result;
         }

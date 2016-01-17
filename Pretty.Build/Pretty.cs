@@ -122,7 +122,9 @@ namespace Pretty.Build
 
             foreach(var requirement in project.Packages) {
                 var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
-                var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib", requirementDirectoryName));
+                
+                var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var requirementPath = Path.Combine(home, String.Join(Path.DirectorySeparatorChar.ToString(), ".pretty", "cache", requirementDirectoryName, "lib"));
 
                 if (Directory.Exists(requirementPath))
                 {
@@ -135,7 +137,7 @@ namespace Pretty.Build
                 else
                 {
                     WriteLine(
-                        String.Format("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'", 
+                        String.Format("    {0} : {1}  # X Missing package? Hint: try 'nuget install {2} -Version {1}'", 
                         requirement.Keys.First<String>(), 
                         requirement.Values.First<String>(), 
                         requirement.Keys.First<String>().ToLower())
@@ -264,32 +266,35 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
+                parameters.ReferencedAssemblies.Add("System.Configuration.dll");
    
                 foreach (var requirement in project.Packages)
                 {
                     var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
-                    var requirementPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\nuget\{0}\lib\", requirementDirectoryName));
+                    
+                    var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    var requirementPath = Path.Combine(home, String.Join(Path.DirectorySeparatorChar.ToString(), ".pretty", "cache", requirementDirectoryName, "lib"));
 
                     var searchOrder = new string[]
                     {
-                        Path.Combine(requirementPath + "net45-full"),
-                        Path.Combine(requirementPath + "net45"),
-                        Path.Combine(requirementPath + "net40-full"),
-                        Path.Combine(requirementPath + "net40"),
+                        Path.Combine(requirementPath, "net45-full"),
+                        Path.Combine(requirementPath, "net45"),
+                        Path.Combine(requirementPath, "net40-full"),
+                        Path.Combine(requirementPath, "net40"),
+                        Path.Combine(requirementPath, "net35"),
                         requirementPath
                     };
                 
 
-                    if (verbose)
-                    {
-                        WriteLine("Package " + requirementPath + "\\*.dll", ConsoleColor.DarkGray);
-                    }
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
                     bool found = false;
                     for (int i = 0; i < searchOrder.Length; i++)
                     {
-                        //Console.WriteLine("Searching " + searchOrder[i]);
+                        if (verbose)
+                        {
+                            WriteLine("Searching " + searchOrder[i] + "..", ConsoleColor.DarkGray);
+                        }
                         if (Directory.Exists(searchOrder[i]))
                         {
                             found = true;
@@ -297,7 +302,6 @@ namespace Pretty.Build
                             var assemblies = Directory.GetFiles(searchOrder[i], "*.dll");
                             assemblies.All(v =>
                             {
-                                //Console.WriteLine(v);
                                 return true;
                             });
 
@@ -309,7 +313,12 @@ namespace Pretty.Build
                             {
                                 foreach (var assembly in assemblies)
                                 {
-                                     log.Info("Adding assembly: " + assembly);
+                                    if (verbose)
+                                    {
+                                        WriteLine("Adding assembly: " + assembly, ConsoleColor.DarkGray);
+                                    }
+                                    
+                                    log.Info("Adding assembly: " + assembly);
                                 }
                             }
 
@@ -334,7 +343,14 @@ namespace Pretty.Build
 
                 foreach (var dependency in project.Dependencies)
                 {
-                    var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
+                    var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+
+                    var dependencyPath = Path.Combine(home, String.Join(Path.DirectorySeparatorChar.ToString(), ".pretty", "cache", dependency, "lib"));
+
+                    WriteLine("Path: " + dependencyPath, ConsoleColor.Yellow);
+
+                    //var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
                     var assemblies = Directory.GetFiles(dependencyPath, "*.dll");
@@ -347,7 +363,6 @@ namespace Pretty.Build
                 parameters.IncludeDebugInformation = true;
                 //parameters.CompilerOptions = "/highentropyva+ /debug+ /debug:full /optimize- /utf8output /noconfig /subsystemversion:6.00";
                 parameters.CompilerOptions = "/debug+ /debug:full /optimize- /noconfig";
-                //parameters.CompilerOptions = "/keyfile:..\\frog.snk";
 
                 CompilerResults results = codeProvider.CompileAssemblyFromFile(parameters, project.Sources.ToArray());
                 if (results.Errors.Count > 0)
@@ -414,8 +429,6 @@ namespace Pretty.Build
         {
             project.Name = projectFile.Directory.Name;
             project.Path = projectFile.Directory;
-
-            project.Output = project.Name + ".dll";
 
             var outputDirectory = "bin"; //System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", project.Name));
             Directory.CreateDirectory(outputDirectory);
