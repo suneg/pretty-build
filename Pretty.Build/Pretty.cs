@@ -345,7 +345,8 @@ namespace Pretty.Build
 
                 parameters.OutputAssembly = outputAssembly;
                 parameters.IncludeDebugInformation = true;
-                parameters.CompilerOptions = "/highentropyva+ /debug+ /debug:full /optimize- /utf8output /noconfig /subsystemversion:6.00";
+                //parameters.CompilerOptions = "/highentropyva+ /debug+ /debug:full /optimize- /utf8output /noconfig /subsystemversion:6.00";
+                parameters.CompilerOptions = "/debug+ /debug:full /optimize- /noconfig";
                 //parameters.CompilerOptions = "/keyfile:..\\frog.snk";
 
                 CompilerResults results = codeProvider.CompileAssemblyFromFile(parameters, project.Sources.ToArray());
