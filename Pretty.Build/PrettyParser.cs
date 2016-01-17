@@ -22,7 +22,7 @@ namespace Pretty.Build
 
             foreach (var line in lines)
             {
-                if (line.Trim().Length == 0)
+                if (line.Trim().Length == 0 || line.Trim().StartsWith("#"))
                     continue;
 
                 if (line.Trim().EndsWith(":"))
@@ -74,6 +74,7 @@ namespace Pretty.Build
                     }
                     else if (currentSection == "packages")
                     {
+
                         var req = line.Trim().Split(':');
                         var dic = new Dictionary<String, String>();
                         dic.Add(req[0].Trim(), req[1].Trim());
