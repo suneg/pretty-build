@@ -49,7 +49,7 @@ namespace Pretty.Build
                         {
                             result.Type = (ProjectType)Enum.Parse(typeof(ProjectType), configuredValue, true);
                         }
-                        catch (ArgumentException ex)
+                        catch (ArgumentException)
                         {
                             var validValues = new List<String>();
                             foreach (var value in Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>())
@@ -82,7 +82,7 @@ namespace Pretty.Build
                     }
                 }
             }
-            
+
             // Add defaults
             if(result.Output == null) 
             {
