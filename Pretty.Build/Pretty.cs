@@ -8,7 +8,8 @@ using Microsoft.CSharp;
 using System.CodeDom.Compiler;
 using NDesk.Options;
 using Pretty.Build.Model;
-
+using System.Net;
+using System.IO.Compression;
 
 namespace Pretty.Build
 {
@@ -18,7 +19,7 @@ namespace Pretty.Build
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 
-        public enum PrettyCommand { None = 0, Build = 1, Clean = 2, Test = 4 }
+        public enum PrettyCommand { None = 0, Build = 1, Clean = 2, Test = 4, AutoFetch = 8 }
         
         public static bool help = false;
         public static bool verbose = false;
@@ -36,6 +37,7 @@ namespace Pretty.Build
                 { "b|build",    v => command |= PrettyCommand.Build },
                 { "c|clean",    v => command |= PrettyCommand.Clean },
                 { "t|test",     v => command |= PrettyCommand.Test },
+                { "a|auto",     v => command |= PrettyCommand.AutoFetch },
                 { "v|verbose", v => verbose = true },
                 { "h|?|help",   v => help = v != null },
             };
@@ -110,10 +112,15 @@ namespace Pretty.Build
             project.Dependencies.ForEach(i => WriteLine(String.Format("    {0}", i), ConsoleColor.Cyan));
             if (project.Dependencies.Count == 0)
             {
-                WriteLine("  # None", ConsoleColor.DarkGray);
+                WriteLine("    # None", ConsoleColor.DarkGray);
             }
             
             Console.WriteLine();
+
+            if ((command & PrettyCommand.AutoFetch) == PrettyCommand.AutoFetch)
+            {
+                LocateRequiredPackages(project, true);
+            }
 
             WriteLine("Packages: ", ConsoleColor.White);
 
@@ -134,7 +141,7 @@ namespace Pretty.Build
                 else
                 {
                     WriteLine(
-                        String.Format("    {0} : {1}  # X Missing package? Hint: try 'nuget install {2} -Version {1}'", 
+                        String.Format("    {0} : {1}  # Missing package? Hint: try 'pretty -a' to auto-fetch 3rd party packages", 
                         requirement.Keys.First<String>(), 
                         requirement.Values.First<String>(), 
                         requirement.Keys.First<String>().ToLower())
@@ -144,7 +151,7 @@ namespace Pretty.Build
 
             if (project.Packages.Count == 0)
             {
-                WriteLine("  # None", ConsoleColor.DarkGray);
+                WriteLine("    # None", ConsoleColor.DarkGray);
             }
             
             
@@ -223,7 +230,7 @@ namespace Pretty.Build
         {
             WriteLine("Sources: ", ConsoleColor.White);
 
-            WriteLine("    **\\*.cs", ConsoleColor.DarkGray);
+            WriteLine("    **" + Path.DirectorySeparatorChar.ToString() + "*.cs", ConsoleColor.DarkGray);
             foreach (FileInfo file in directoryInfo.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
                 project.Sources.Add(file.FullName);
@@ -263,80 +270,12 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
+                parameters.ReferencedAssemblies.Add("System.Net.dll");
                 parameters.ReferencedAssemblies.Add("System.Configuration.dll");
-   
-                foreach (var requirement in project.Packages)
-                {
-                    var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
-                    
-                    var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    var requirementPath = Path.Combine(home, String.Join(Path.DirectorySeparatorChar.ToString(), ".pretty", "cache", requirementDirectoryName, "lib"));
-
-                    var searchOrder = new string[]
-                    {
-                        Path.Combine(requirementPath, "net45-full"),
-                        Path.Combine(requirementPath, "net45"),
-                        Path.Combine(requirementPath, "net40-full"),
-                        Path.Combine(requirementPath, "net40"),
-                        Path.Combine(requirementPath, "net35"),
-                        requirementPath
-                    };
-                
 
 
-                    // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
-                    bool found = false;
-                    for (int i = 0; i < searchOrder.Length; i++)
-                    {
-                        if (verbose)
-                        {
-                            WriteLine("Searching " + searchOrder[i] + "..", ConsoleColor.DarkGray);
-                        }
-                        if (Directory.Exists(searchOrder[i]))
-                        {
-                            found = true;
-                            
-                            var assemblies = Directory.GetFiles(searchOrder[i], "*.dll");
-                            assemblies.All(v =>
-                            {
-                                return true;
-                            });
-
-                            if (assemblies.Length == 0)
-                            {
-                                Console.WriteLine("No assemblies found in '" + searchOrder[i] + "'");
-                            }
-                            else
-                            {
-                                foreach (var assembly in assemblies)
-                                {
-                                    if (verbose)
-                                    {
-                                        WriteLine("Adding assembly: " + assembly, ConsoleColor.DarkGray);
-                                    }
-
-                                    log.Info("Adding assembly: " + assembly);
-                                }
-                            }
-
-
-                            parameters.ReferencedAssemblies.AddRange(assemblies);
-
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        WriteLine(
-                        String.Format("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'",
-                        requirement.Keys.First<String>(),
-                        requirement.Values.First<String>(),
-                        requirement.Keys.First<String>().ToLower())
-                        , ConsoleColor.Red);
-                        
-                    }
-                }
+                var packages = LocateRequiredPackages(project, false);
+                parameters.ReferencedAssemblies.AddRange(packages.ToArray());
 
                 foreach (var dependency in project.Dependencies)
                 {
@@ -350,8 +289,8 @@ namespace Pretty.Build
                     //var dependencyPath = System.Environment.ExpandEnvironmentVariables(String.Format(@"%userprofile%\.pretty\cache\{0}\lib", dependency));
 
                     // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
-                    var assemblies = Directory.GetFiles(dependencyPath, "*.dll");
-                    parameters.ReferencedAssemblies.AddRange(assemblies);
+                    var dependentAssemblies = Directory.GetFiles(dependencyPath, "*.dll");
+                    parameters.ReferencedAssemblies.AddRange(dependentAssemblies);
                 }
 
                 parameters.GenerateExecutable = project.Type == ProjectType.Executable;
@@ -403,6 +342,107 @@ namespace Pretty.Build
                     
                 result.Add(new BuildResult("Build: SUCCESS", DateTime.Now.Subtract(start).TotalSeconds, ConsoleColor.Green));
             }
+        }
+
+        private static List<String> LocateRequiredPackages(Project project, bool autoFetchPackages)
+        {
+            var allAssemblies = new List<String>();
+
+            foreach (var requirement in project.Packages)
+            {
+                var packageName = requirement.Keys.First<String>();
+                var packageVersion = requirement.Values.First<String>();
+
+                var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
+
+                var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+                var packagePath = Path.Combine(home, String.Join(Path.DirectorySeparatorChar.ToString(), ".pretty", "cache", requirementDirectoryName));
+                var requirementPath = Path.Combine(packagePath, "lib");
+
+                var searchOrder = new string[]
+                    {
+                        Path.Combine(requirementPath, "net45-full"),
+                        Path.Combine(requirementPath, "net45"),
+                        Path.Combine(requirementPath, "net40-full"),
+                        Path.Combine(requirementPath, "net40"),
+                        Path.Combine(requirementPath, "net35"),
+                        requirementPath
+                    };
+
+                if (!Directory.Exists(requirementPath) && autoFetchPackages)
+                {
+                    FetchPackage(packageName, packageVersion, packagePath);
+                }
+
+                // TODO: No support for different .NET versions (3.5 / 4.0 / 4.5)
+                bool found = false;
+                for (int i = 0; i < searchOrder.Length; i++)
+                {
+                    if (verbose)
+                    {
+                        WriteLine("Searching " + searchOrder[i] + "..", ConsoleColor.DarkGray);
+                    }
+                    if (Directory.Exists(searchOrder[i]))
+                    {
+                        found = true;
+
+                        var assemblies = Directory.GetFiles(searchOrder[i], "*.dll");
+                        assemblies.All(v =>
+                        {
+                            return true;
+                        });
+
+                        if (assemblies.Length == 0)
+                        {
+                            Console.WriteLine("No assemblies found in '" + searchOrder[i] + "'");
+                        }
+                        else
+                        {
+                            foreach (var assembly in assemblies)
+                            {
+                                if (verbose)
+                                {
+                                    WriteLine("Adding assembly: " + assembly, ConsoleColor.DarkGray);
+                                }
+
+                                log.Info("Adding assembly: " + assembly);
+                            }
+                        }
+
+                        allAssemblies.AddRange(assemblies);
+
+                        break;
+                    }
+                }
+
+
+                if (!found)
+                {
+                    WriteLine(
+                    String.Format("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'",
+                    requirement.Keys.First<String>(),
+                    requirement.Values.First<String>(),
+                    requirement.Keys.First<String>().ToLower())
+                    , ConsoleColor.Red);
+                }
+            }
+
+            return allAssemblies;
+        }
+
+        private static void FetchPackage(string packageName, string packageVersion, string packagePath)
+        {
+            Directory.CreateDirectory(packagePath);
+            
+            var tempFile = Path.Combine(packagePath, "temp.zip");
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(String.Format("https://www.nuget.org/api/v2/package/{0}/{1}", packageName, packageVersion), tempFile);
+            }
+            
+            ZipFile.ExtractToDirectory(tempFile, packagePath);
+            File.Delete(tempFile);
         }
 
         private static DateTime GetLatestSourceModification(Project project)
