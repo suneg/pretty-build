@@ -9,7 +9,7 @@ using System.CodeDom.Compiler;
 using NDesk.Options;
 using Pretty.Build.Model;
 using System.Net;
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace Pretty.Build
 {
@@ -117,12 +117,18 @@ namespace Pretty.Build
             
             Console.WriteLine();
 
-            if ((command & PrettyCommand.AutoFetch) == PrettyCommand.AutoFetch)
-            {
-                LocateRequiredPackages(project, true);
-            }
 
             WriteLine("Packages: ", ConsoleColor.White);
+            List<String> packages = null;
+
+            if ((command & PrettyCommand.AutoFetch) == PrettyCommand.AutoFetch)
+            {
+                packages = LocateRequiredPackages(project, true);
+            }
+            else
+            {
+                packages = LocateRequiredPackages(project, false);
+            }
 
             foreach(var requirement in project.Packages) {
                 var requirementDirectoryName = String.Format("{0}.{1}", requirement.Keys.First<String>(), requirement.Values.First<String>());
@@ -190,7 +196,7 @@ namespace Pretty.Build
 
             if ((command & PrettyCommand.Build) == PrettyCommand.Build)
             {
-                Compile(project);
+                Compile(project, packages);
             }
 
             if ((command & PrettyCommand.Test) == PrettyCommand.Test)
@@ -243,7 +249,7 @@ namespace Pretty.Build
             return filePath.Substring(project.Path.FullName.Length + 1);
         }
 
-        private static void Compile(Project project)
+        private static void Compile(Project project, List<String> packages)
         {
             var outputAssembly = Path.Combine(project.OutputPath, project.Output);
             var skip = false;
@@ -274,7 +280,6 @@ namespace Pretty.Build
                 parameters.ReferencedAssemblies.Add("System.Configuration.dll");
 
 
-                var packages = LocateRequiredPackages(project, false);
                 parameters.ReferencedAssemblies.AddRange(packages.ToArray());
 
                 foreach (var dependency in project.Dependencies)
@@ -417,15 +422,15 @@ namespace Pretty.Build
                 }
 
 
-                if (!found)
+                /*if (!found)
                 {
                     WriteLine(
-                    String.Format("    {0} : {1}  # Missing package? Hint: try 'nuget install {2} -Version {1}'",
+                    String.Format("    {0} : {1}  # X Missing package? Hint: try 'nuget install {2} -Version {1}'",
                     requirement.Keys.First<String>(),
                     requirement.Values.First<String>(),
                     requirement.Keys.First<String>().ToLower())
                     , ConsoleColor.Red);
-                }
+                }*/
             }
 
             return allAssemblies;
@@ -438,10 +443,13 @@ namespace Pretty.Build
             var tempFile = Path.Combine(packagePath, "temp.zip");
             using (var client = new WebClient())
             {
+                Write(String.Format("    # Downloading {0}... ", packageName), ConsoleColor.DarkGray);
                 client.DownloadFile(String.Format("https://www.nuget.org/api/v2/package/{0}/{1}", packageName, packageVersion), tempFile);
+                WriteLine("Done!", ConsoleColor.DarkGray);
             }
-            
-            ZipFile.ExtractToDirectory(tempFile, packagePath);
+
+            var zip = new FastZip();
+            zip.ExtractZip(tempFile, packagePath, null);
             File.Delete(tempFile);
         }
 
