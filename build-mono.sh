@@ -1,0 +1,10 @@
+﻿#!/bin/sh
+
+mcs -fullpaths /optimize- /debug+ /debug:full -platform:anycpu -target:exe \
+    -out:bin/pretty.exe \
+    -r:packages/NDesk.Options.0.2.1/lib/NDesk.Options.dll \
+    -r:packages/log4net.2.0.3/lib/net40-full/log4net.dll \
+    Pretty.Build/BuildSpec.cs Pretty.Build/Pretty.cs Pretty.Build/PrettyParser.cs \
+    Pretty.Build/ProjectType.cs Pretty.Build/Properties/AssemblyInfo.cs \
+    Pretty.Build/Model/BuildResult.cs Pretty.Build/Model/Project.cs \
+    Pretty.Build/InvalidConfigurationException.cs
