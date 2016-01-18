@@ -1,5 +1,6 @@
 #!/bin/sh
 
+mkdir -p Pretty.Build/bin
 mcs -fullpaths /optimize- /debug+ /debug:full -platform:anycpu -target:exe \
     -out:Pretty.Build/bin/pretty.exe \
     -r:packages/NDesk.Options.0.2.1/lib/NDesk.Options.dll \
